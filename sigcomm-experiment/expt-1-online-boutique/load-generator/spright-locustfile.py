@@ -1,21 +1,11 @@
 #!/usr/bin/python
-#
-# Copyright 2018 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Based on Locust version 1.6.0
 
 import random, time
-from locust import HttpUser, TaskSet, between, events
+from locust import HttpUser, TaskSet, between, runners, events
+
+# Monkey patch stats report interval
+runners.WORKER_REPORT_INTERVAL = 1
 
 products = [
     '0PUK6V6EV0',
@@ -67,15 +57,24 @@ class WebsiteUser(HttpUser):
     tasks = [UserBehavior]
     wait_time = between(1, 10)
 
-stat_file = open('stats.csv', 'w')
-
 @events.request_success.add_listener
 def hook_request_success(request_type, name, response_time, response_length, **kw):
-    # print(request_type + ";" + name + ";" + str(response_time) + ";" + str(response_length) + "\n")
-    #stat_file.write(request_type + ";" + name + ";" + str(response_time) + ";" + str(response_length) + "\n")
-    #print(int(time.time()))
-    stat_file.write(str(time.time()) + ";" + request_type + ";" + name + ";" + str(response_time) + "\n")
+    stats_file.write(str(time.time()) + ";" + request_type + ";" + name + ";" + str(response_time) + "\n")
+
+# @events.request.add_listener
+# def hook_request(request_type, name, response_time, response_length, response,
+#                  context, exception, **kw):
+#     if stats_file:
+#         stats_file.write(str(time.time()) + ";" + request_type + ";" + name + ";" + str(response_time) + "\n")
 
 @events.quitting.add_listener
 def hook_quitting(environment, **kw):
-    stat_file.close()
+    if isinstance(environment.runner, runners.WorkerRunner):
+        stats_file.close()
+
+@events.init.add_listener
+def hook_init(environment, **kw):
+    global stats_file
+    stats_file = None
+    if isinstance(environment.runner, runners.WorkerRunner):
+        stats_file = open(f'resp_time_{environment.runner.client_id}.csv', 'w')
