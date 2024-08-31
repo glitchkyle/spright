@@ -43,15 +43,44 @@ function off_swap {
 }
 
 function install_k8s_tools {
-	curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && \
-	echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list && \
-	sudo apt-get update -q && \
-	apt-cache madison kubelet
-	sudo apt-get install -qy kubelet=1.19.0-00 kubectl=1.19.0-00 kubeadm=1.19.0-00 --allow-downgrades
+	echo "Now Installing Kubernetes and Tools"
+
+	# Installation Documentation: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+	# ** Update apt package index and install dependencies for Kubernetes apt repository
+
+	sudo apt-get update
+	# apt-transport-https may be a dummy package; if so, you can skip that package
+	sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+
+	# ** Download public signing key for Kubernetes apt repository
+
+	# If the directory `/etc/apt/keyrings` does not exist, it should be created before the curl command.
+	# In releases older than Debian 12 and Ubuntu 22.04, directory /etc/apt/keyrings does not exist by default, and it should be created before the curl command.
+	sudo mkdir -p -m 755 /etc/apt/keyrings
+	curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+	# ** Add Kubernetes apt repository
+
+	# This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+	echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+	# ** Update apt package index and install kubectlm kubeadm, and kubectl
+
+	sudo apt-get update
+	sudo apt-get install -y kubelet kubeadm kubectl
+	sudo apt-mark hold kubelet kubeadm kubectl
+
+	# ** K8 Configurations
+
+	# (Optional) Enable the kubelet service before running kubeadm
+	sudo systemctl enable --now kubelet
 	# enable unsafe sysctl options in kubelet configure file
 	sudo sed -i '/\[Service\]/a\Environment="KUBELET_UNSAFE_SYSCTLS=--allowed-unsafe-sysctls='kernel.shm*,kernel.sem,kernel.msg*,net.core.*'"' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 	sudo systemctl daemon-reload
 	sudo systemctl restart kubelet
+
+	echo "Finished Installing Kubernetes and Tools"
 }
  
 function deploy_k8s_master {
