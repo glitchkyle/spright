@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Please run the script on MASTER node (node-0)
-kubectl taint nodes --all node-role.kubernetes.io/master-
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 
 kubectl get node > nodes_name.txt
 

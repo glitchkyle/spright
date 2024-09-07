@@ -80,6 +80,9 @@ function install_k8s_tools {
 	sudo systemctl daemon-reload
 	sudo systemctl restart kubelet
 
+	# Install cni plugin to configure container network and fix NetworkReady=false
+	kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+
 	echo "Finished Installing Kubernetes and Tools"
 }
  
