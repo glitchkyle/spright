@@ -43,15 +43,42 @@ function off_swap {
 }
 
 function install_k8s_tools {
-	curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && \
-	echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list && \
-	sudo apt-get update -q && \
-	apt-cache madison kubelet
-	sudo apt-get install -qy kubelet=1.19.0-00 kubectl=1.19.0-00 kubeadm=1.19.0-00 --allow-downgrades
+	echo "Now Installing Kubernetes and Tools"
+
+	# Installation Documentation: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+	# ** Update apt package index and install dependencies for Kubernetes apt repository
+
+	sudo apt-get update
+	# apt-transport-https may be a dummy package; if so, you can skip that package
+	sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+
+	# ** Download public signing key for Kubernetes apt repository
+
+	# If the directory `/etc/apt/keyrings` does not exist, it should be created before the curl command.
+	# In releases older than Debian 12 and Ubuntu 22.04, directory /etc/apt/keyrings does not exist by default, and it should be created before the curl command.
+	sudo mkdir -p -m 755 /etc/apt/keyrings
+	curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+	# ** Add Kubernetes apt repository
+
+	# This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+	echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+	# ** Update apt package index and install kubectlm kubeadm, and kubectl
+
+	sudo apt-get update
+	sudo apt-get install -y kubelet kubeadm kubectl
+	sudo apt-mark hold kubelet kubeadm kubectl
+
+	# ** K8 Configurations
+
 	# enable unsafe sysctl options in kubelet configure file
 	sudo sed -i '/\[Service\]/a\Environment="KUBELET_UNSAFE_SYSCTLS=--allowed-unsafe-sysctls='kernel.shm*,kernel.sem,kernel.msg*,net.core.*'"' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 	sudo systemctl daemon-reload
 	sudo systemctl restart kubelet
+
+	echo "Finished Installing Kubernetes and Tools"
 }
  
 function deploy_k8s_master {
@@ -69,8 +96,10 @@ function deploy_k8s_master {
 	# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/
 	#after this step, coredns status will be changed to running from pending
 #	kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
- 	kubectl apply -f https://gist.githubusercontent.com/ShixiongQi/f56db40853965090dd2d6cf723ebd8b3/raw/e45eab1722d37255382d21f57ce48ecbd9fe3d3e/y-calico-tigera-operator.yaml
- 	kubectl apply -f https://gist.githubusercontent.com/ShixiongQi/f56db40853965090dd2d6cf723ebd8b3/raw/e45eab1722d37255382d21f57ce48ecbd9fe3d3e/y-calico-custom-resources.yaml
+
+	# Install cni plugin to configure container network and fix NetworkReady=false
+	kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+
 	kubectl get nodes
 	kubectl get pods --namespace=kube-system
 }
