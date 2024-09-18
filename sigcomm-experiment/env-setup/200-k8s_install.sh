@@ -73,8 +73,6 @@ function install_k8s_tools {
 
 	# ** K8 Configurations
 
-	# (Optional) Enable the kubelet service before running kubeadm
-	sudo systemctl enable --now kubelet
 	# enable unsafe sysctl options in kubelet configure file
 	sudo sed -i '/\[Service\]/a\Environment="KUBELET_UNSAFE_SYSCTLS=--allowed-unsafe-sysctls='kernel.shm*,kernel.sem,kernel.msg*,net.core.*'"' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 	sudo systemctl daemon-reload
