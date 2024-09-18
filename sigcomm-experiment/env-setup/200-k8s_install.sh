@@ -98,8 +98,6 @@ function deploy_k8s_master {
 	# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/
 	#after this step, coredns status will be changed to running from pending
 #	kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
- 	kubectl apply -f https://gist.githubusercontent.com/ShixiongQi/f56db40853965090dd2d6cf723ebd8b3/raw/e45eab1722d37255382d21f57ce48ecbd9fe3d3e/y-calico-tigera-operator.yaml
- 	kubectl apply -f https://gist.githubusercontent.com/ShixiongQi/f56db40853965090dd2d6cf723ebd8b3/raw/e45eab1722d37255382d21f57ce48ecbd9fe3d3e/y-calico-custom-resources.yaml
 
 	# Install cni plugin to configure container network and fix NetworkReady=false
 	kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
