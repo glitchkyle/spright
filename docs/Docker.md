@@ -1,0 +1,1 @@
+# Running SPRIGHT in Docker
