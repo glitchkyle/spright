@@ -16,7 +16,8 @@ RUN apt-get update && \
     iproute2 \
     libnuma-dev \
     dpdk-dev \
-    libbpf-dev
+    libbpf-dev \
+    git
 
 # Set environment variables
 ENV DPDK_HOME=/mydata/dpdk
@@ -24,10 +25,22 @@ ENV SPRIGHT_HOME=/mydata/spright
 ENV LD_LIBRARY_PATH=/mydata/dpdk/build/lib:/mydata/dpdk/build/lib
 ENV PATH="${PATH}:/mydata/spright/bin"
 
+RUN mkdir /mydata
+
+# Install libbpf from source
+RUN cd /mydata && \
+    git clone --single-branch https://github.com/libbpf/libbpf.git && \
+    cd libbpf && \
+    git checkout v0.6.0 && \
+    cd src && \
+    make -j $(nproc) && \
+    make install && \
+    echo "/usr/lib64/" | tee -a /etc/ld.so.conf && \
+    ldconfig
+
 # Copy the SPRIGHT gateway component and dpdk/libbpf into the container
 # Ensure these are in the correct directory structure under /mydata
 COPY ./dpdk /mydata/dpdk
-COPY ./libbpf /mydata/libbpf
 COPY ./spright /mydata/spright
 
 # Set the working directory to SPRIGHT directory
