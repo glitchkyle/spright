@@ -1,53 +1,23 @@
-# Base image with necessary dependencies
+# Use Ubuntu 20.04 as the base image, as specified in the YAML
 FROM ubuntu:20.04
 
 # Ubuntu 20.04 image hangs unless timezone is set
 RUN DEBIAN_FRONTEND=noninteractive \
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
 
-# Install dependencies
+# Install any necessary dependencies
 RUN apt-get update && \
     apt-get install -y \
-    build-essential \
-    clang \
-    llvm \
     libelf-dev \
     libpcap-dev \
-    iproute2 \
     libnuma-dev \
+    libconfig-dev \
     dpdk-dev \
-    libbpf-dev \
-    git
+    pkg-config \
+    iproute2
 
-# Set environment variables
-ENV DPDK_HOME=/mydata/dpdk
-ENV SPRIGHT_HOME=/mydata/spright
-ENV LD_LIBRARY_PATH=/mydata/dpdk/build/lib:/mydata/dpdk/build/lib
-ENV PATH="${PATH}:/mydata/spright/bin"
+# Set up working directory for SPRIGHT
+WORKDIR /mydata/spright
 
-RUN mkdir /mydata
-
-# Install libbpf from source
-RUN cd /mydata && \
-    git clone --single-branch https://github.com/libbpf/libbpf.git && \
-    cd libbpf && \
-    git checkout v0.6.0 && \
-    cd src && \
-    make -j $(nproc) && \
-    make install && \
-    echo "/usr/lib64/" | tee -a /etc/ld.so.conf && \
-    ldconfig
-
-# Copy the SPRIGHT gateway component and dpdk/libbpf into the container
-# Ensure these are in the correct directory structure under /mydata
-COPY ./dpdk /mydata/dpdk
-COPY ./spright /mydata/spright
-
-# Set the working directory to SPRIGHT directory
-WORKDIR /mydata/spright/
-
-# Expose any necessary ports (if needed)
-EXPOSE 8000
-
-# Set default command
-CMD ["/bin/bash"]
+# Keep the container running
+CMD ["bash", "-c", "while true; do sleep 30; done;"]
