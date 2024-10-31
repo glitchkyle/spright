@@ -1,6 +1,6 @@
 #!/bin/bash
 
-$IMAGE_NAME=$1
+IMAGE_NAME=$1
 CONTAINER_NAME=$2
 
 sudo docker run -d \
