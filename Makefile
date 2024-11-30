@@ -82,6 +82,16 @@ bin/nf_sk_msg: src/io_sk_msg.o src/nf.o $(COMMON_OBJS)
 	@ echo "CC $@"
 	@ $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
+nf: bin/nf_rte_ring bin/nf_sk_msg bin/sk_nf_rte_ring bin/sk_nf_sk_msg
+
+bin/sk_nf_rte_ring: src/io_rte_ring.o src/sk_nf.o $(COMMON_OBJS)
+	@ echo "CC $@"
+	@ $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+bin/sk_nf_sk_msg: src/io_sk_msg.o src/sk_nf.o $(COMMON_OBJS)
+	@ echo "CC $@"
+	@ $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
 adservice: bin/nf_adservice_rte_ring bin/nf_adservice_sk_msg
 
 bin/nf_adservice_rte_ring: src/io_rte_ring.o src/online_boutique/adservice.o $(COMMON_OBJS)

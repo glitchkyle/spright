@@ -85,6 +85,31 @@ nf()
 		${1}
 }
 
+sk_nf()
+{
+	if ! [ ${1} ]
+	then
+		print_usage
+		exit 1
+	fi
+
+	if [ ${GO_NF} ] && [ ${GO_NF} -eq 1 ]
+	then
+		go="go_"
+	else
+		go=""
+	fi
+
+	exec ${build_path}/${go}sk_nf_${io} \
+		-l ${CPU_NF[$((${1} - 1))]} \
+		--file-prefix=spright \
+		--proc-type=secondary \
+		--no-telemetry \
+		--no-pci \
+		-- \
+		${1}
+}
+
 adservice()
 {
 	if ! [ ${1} ]
@@ -346,6 +371,10 @@ case ${1} in
 
 	"nf" )
 		nf ${2}
+	;;
+
+	"sk_nf" )
+		sk_nf ${2}
 	;;
 
 	"adservice" )
