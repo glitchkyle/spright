@@ -36,9 +36,9 @@ BPF_FLAGS = -target bpf
 
 COMMON_OBJS = src/log/log.o src/utility.o src/timer.o src/io_helper.o src/common.o
 
-.PHONY: all shm_mgr gateway nf clean
+.PHONY: all shm_mgr gateway sk_gateway nf sk_nf clean
 
-all: bin shm_mgr gateway nf sockmap_manager adservice currencyservice \
+all: bin shm_mgr gateway sk_gateway nf sk_nf sockmap_manager adservice currencyservice \
 		emailservice paymentservice shippingservice productcatalogservice \
 		cartservice recommendationservice frontendservice checkoutservice \
 		ebpf/sk_msg_kern.o
@@ -72,6 +72,12 @@ bin/gateway_sk_msg: src/io_sk_msg.o src/gateway.o $(COMMON_OBJS)
 	@ echo "CC $@"
 	@ $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
+sk_gateway: bin/sk_gateway_sk_msg
+
+bin/sk_gateway_sk_msg: src/io_socket.o src/gateway.o $(COMMON_OBJS)
+	@ echo "CC $@"
+	@ $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
 nf: bin/nf_rte_ring bin/nf_sk_msg
 
 bin/nf_rte_ring: src/io_rte_ring.o src/nf.o $(COMMON_OBJS)
@@ -82,13 +88,9 @@ bin/nf_sk_msg: src/io_sk_msg.o src/nf.o $(COMMON_OBJS)
 	@ echo "CC $@"
 	@ $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-nf: bin/nf_rte_ring bin/nf_sk_msg bin/sk_nf_rte_ring bin/sk_nf_sk_msg
+sk_nf: bin/sk_nf_sk_msg
 
-bin/sk_nf_rte_ring: src/io_rte_ring.o src/sk_nf.o $(COMMON_OBJS)
-	@ echo "CC $@"
-	@ $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
-
-bin/sk_nf_sk_msg: src/io_sk_msg.o src/sk_nf.o $(COMMON_OBJS)
+bin/sk_nf_sk_msg: src/io_socket.o src/nf.o $(COMMON_OBJS)
 	@ echo "CC $@"
 	@ $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 

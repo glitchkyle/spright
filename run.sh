@@ -60,6 +60,17 @@ gateway()
 		--no-pci
 }
 
+sk_gateway()
+{
+	exec ${build_path}/sk_gateway_${io} \
+		-l ${CPU_GATEWAY[0]},${CPU_GATEWAY[1]},${CPU_GATEWAY[2]},${CPU_GATEWAY[3]},${CPU_GATEWAY[4]},${CPU_GATEWAY[5]} \
+		--main-lcore=${CPU_GATEWAY[0]} \
+		--file-prefix=spright \
+		--proc-type=secondary \
+		--no-telemetry \
+		--no-pci
+}
+
 nf()
 {
 	if ! [ ${1} ]
@@ -367,6 +378,10 @@ case ${1} in
 
 	"gateway" )
 		gateway
+	;;
+
+	"sk_gateway" )
+		sk_gateway
 	;;
 
 	"nf" )
